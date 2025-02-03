@@ -842,13 +842,8 @@ static void esp32_wifi_init(struct net_if *iface)
 #if defined(CONFIG_ESP32_WIFI_AP_STA_MODE)
 	struct wifi_nm_instance *nm = wifi_nm_get_instance("esp32_wifi_nm");
 
-	if (!esp32_wifi_iface_ap) {
-		esp32_wifi_iface_ap = iface;
-		dev_data->state = ESP32_AP_STOPPED;
-
-		esp_read_mac(dev_data->mac_addr, ESP_MAC_WIFI_SOFTAP);
-		wifi_nm_register_mgd_type_iface(nm, WIFI_TYPE_SAP, esp32_wifi_iface_ap);
-	} else {
+	/* STA interface is initialized first */
+	if (!esp32_wifi_iface) {
 		esp32_wifi_iface = iface;
 		dev_data->state = ESP32_STA_STOPPED;
 
@@ -856,6 +851,12 @@ static void esp32_wifi_init(struct net_if *iface)
 		esp_read_mac(dev_data->mac_addr, ESP_MAC_WIFI_STA);
 		esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA, eth_esp32_rx);
 		wifi_nm_register_mgd_type_iface(nm, WIFI_TYPE_STA, esp32_wifi_iface);
+	} else {
+		esp32_wifi_iface_ap = iface;
+		dev_data->state = ESP32_AP_STOPPED;
+
+		esp_read_mac(dev_data->mac_addr, ESP_MAC_WIFI_SOFTAP);
+		wifi_nm_register_mgd_type_iface(nm, WIFI_TYPE_SAP, esp32_wifi_iface_ap);
 	}
 #else
 
